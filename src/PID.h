@@ -12,10 +12,11 @@ public:
 
   /*
   * Coefficients
-  */ 
+  */
   double Kp;
   double Ki;
   double Kd;
+  double dt; // time step.
 
   /*
   * Constructor
@@ -30,7 +31,7 @@ public:
   /*
   * Initialize PID.
   */
-  void Init(double Kp, double Ki, double Kd);
+  void SetGains(double Kp, double Ki, double Kd);
 
   /*
   * Update the PID error variables given cross track error.
@@ -40,7 +41,7 @@ public:
   /*
   * Calculate the total PID error.
   */
-  double TotalError();
+  double ControlOutput();
 };
 
 #endif /* PID_H */
