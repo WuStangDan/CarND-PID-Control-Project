@@ -1,8 +1,9 @@
 #ifndef PID_H
 #define PID_H
 
+
 class PID {
-public:
+
   /*
   * Errors
   */
@@ -17,7 +18,12 @@ public:
   double Ki;
   double Kd;
   double dt; // time step.
+  double prev_time;
 
+  // Used for FindSimulatorRate
+
+
+public:
   /*
   * Constructor
   */
@@ -32,6 +38,10 @@ public:
   * Initialize PID.
   */
   void SetGains(double Kp, double Ki, double Kd);
+
+  // Used to find simulator running rate for dt that is needed in
+  // PID calculation.
+  void FindSimulatorRate();
 
   /*
   * Update the PID error variables given cross track error.

@@ -33,7 +33,7 @@ int main()
   uWS::Hub h;
 
   PID pid;
-  pid.SetGains(0.2, 0.0005, 0.5);
+  pid.SetGains(0.2, 0.025, 0.01);
 
   // TODO: Initialize the pid variable.
 
@@ -60,6 +60,7 @@ int main()
           * another PID controller to control the speed!
           */
           pid.UpdateError(cte);
+          //pid.FindSimulatorRate();
           steer_value = pid.ControlOutput();
 
           // DEBUG

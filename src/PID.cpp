@@ -1,5 +1,6 @@
 #include "PID.h"
 #include <iostream>
+#include <ctime>
 
 using namespace std;
 
@@ -20,7 +21,18 @@ void PID::SetGains(double Kp_in, double Ki_in, double Kd_in) {
 
   i_error = 0;
 
-  dt = 1.0/10; // Assume 10 hz
+  dt = 1.0/500; // Found refresh rate was roughly 500 hz.
+  prev_time = 0.0;
+}
+
+void PID::FindSimulatorRate()
+{
+  clock_t current = clock();
+
+  double current_time  = double(current) / CLOCKS_PER_SEC;
+  cout << "Refresh Rate is " << 1.0/(current_time - prev_time) << endl;
+
+  prev_time = current_time;
 }
 
 void PID::UpdateError(double cte) {
@@ -29,6 +41,7 @@ void PID::UpdateError(double cte) {
   p_error = cte;
 
   cout << endl << "I error is " << i_error << endl;
+
 
   // Implement to prevent integrator windup.
   // Due to system not requiring a constant control output to maintain a set
@@ -39,7 +52,7 @@ void PID::UpdateError(double cte) {
   // perfectly straight, the I term would be needed to eliminate steady state
   // error in such a system. For that reason a very small Ki is used along with
   // a small integrator.
-  int windup = 6;
+  int windup = 1;
   if (i_error > windup) {
     i_error = windup;
   } else if (i_error < -windup) {
