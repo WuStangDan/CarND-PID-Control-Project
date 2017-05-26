@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "PID.h"
 #include <math.h>
+#include <ctime>
 
 // for convenience
 using json = nlohmann::json;
@@ -28,12 +29,17 @@ std::string hasData(std::string s) {
   return "";
 }
 
+// Andrey Glushko [May 9] on PID slack channel. Used to reset simulator for
+// consistent twiddle start times.
+void reset_simulator(uWS::WebSocket<uWS::SERVER>& ws);
+
 int main()
 {
   uWS::Hub h;
 
   PID pid;
-  pid.SetGains(0.2, 0.025, 0.01);
+  pid.SetGains(0.22, 0.024, 0.01);
+
 
   // TODO: Initialize the pid variable.
 
@@ -41,6 +47,7 @@ int main()
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+
     if (length && length > 2 && data[0] == '4' && data[1] == '2')
     {
       auto s = hasData(std::string(data));
@@ -59,9 +66,21 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          pid.UpdateError(cte);
-          //pid.FindSimulatorRate();
+
+          //pid.FindSimulatorRate();  // Used to find rate for derivative calc.
+
+          // Update steering angle based on PID controller output.
+          std::clock_t current = clock();
+          double current_time  = double(current) / CLOCKS_PER_SEC;
+          if(current_time > pid.GetResetTime()) {
+            // Reset code by Andrey Glushko on PID slack channel.
+            reset_simulator(ws);
+            pid.SetResetTime(6);
+          }
+          pid.UpdateError(cte, current_time);
           steer_value = pid.ControlOutput();
+
+
 
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
@@ -72,6 +91,7 @@ int main()
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+
         }
       } else {
         // Manual driving
@@ -116,4 +136,11 @@ int main()
     return -1;
   }
   h.run();
+}
+
+void reset_simulator(uWS::WebSocket<uWS::SERVER>& ws)
+{
+        // reset
+        std::string msg("42[\"reset\", {}]");
+        ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 }
