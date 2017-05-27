@@ -1,34 +1,5 @@
 #include "PID.h"
 
-/*
-NOTES:
-
-Manually tuned to values (0.2, 0.025, 0.01) by slowly building up P, then slowly
-increasing D inordered to smooth out BANG BANG actions. Then slightly increased i
-till controller felt stable.
-
-Ran twiddle first with deltas of (0.01, 0, 0.001) and got basically no move on
-the values. Final was (0.18, 0.025, 0. 009).
-
-Found bug in code. above results no good.
-
-Then ran twiddle with those starting values and deltas of (0.1, 0, 0.005) to
-further get improved values. Did 5 "second" roughly one lap, twiddle times.
-
-Did some trial and error of watching the first few runs to roughly tune the deltas.
-Saw a lot of off the track.
-
-Lowered the speed from 0.5 to 0.2 as it was way to inconsistent.
-
-Major problem running twiddle is can't get an effective restart time so each iteration
-takes different corners. This gives inconsistent results.
-
-Found out how to reset based on help form the carnd.
-
-
-Twiddle modified values to (.22 and .024 and 0.01).
-*/
-
 
 using namespace std;
 
@@ -92,7 +63,7 @@ void PID::TwiddleGains()
     if (total_error < best_error) {
       // Improvement, save new best error and increase delta.
       best_error = total_error;
-      gain_delta[count] *= 1.1;
+      gain_delta[count] *= 1.2;
       twiddle_state = 0;
       twiddle_gain_count += 1;
     } else {
@@ -104,14 +75,14 @@ void PID::TwiddleGains()
     if (total_error < best_error) {
       // Improvement, save new best error and increase delta.
       best_error = total_error;
-      gain_delta[count] *= 1.1;
+      gain_delta[count] *= 1.2;
       twiddle_state = 0;
       twiddle_gain_count += 1;
     } else {
       // No improvement after moving gain in both directions, reset and decrease
       // size of gain delta.
       gains[count] += gain_delta[count];
-      gain_delta[count] *= 0.9;
+      gain_delta[count] *= 0.8;
       twiddle_state = 0;
       twiddle_gain_count += 1;
     }
@@ -151,7 +122,8 @@ void PID::UpdateError(double cte, double current_time) {
   double sum_gain_delta = gain_delta[0] + gain_delta[1] + gain_delta[2];
   if (sum_gain_delta > 0.001) {
     if ((current_time > twiddle_time) && (current_time > 6)) {
-      TwiddleGains();
+      //TwiddleGains(); //No longer run twiddle since gains are set at optimal
+      // points found by twiddle.
       if (twiddle_state != 0) {
         twiddle_time = current_time + 6; // Only add time if in state 1 or 2
         // Otherwise re run twiddle gains immediately.

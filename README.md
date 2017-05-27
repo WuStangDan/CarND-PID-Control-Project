@@ -1,6 +1,24 @@
 # CarND-Controls-PID
 Self-Driving Car Engineer Nanodegree Program
 
+## Submission
+
+* Describe the effect each of the P, I, D components had in your implementation.
+The P gain is multiplied by the error to give a steering angle that is proportional to the amount of error there is currently. The I gain is multiplied by error integrated over time or in other words a running sum of the error that has been seen so far. The D gain is multiplied by the current error minus the previous time steps error, divided by the time step. A rough estimate of the time step (the simulators refresh rate) was found by using the ctime library.
+
+* Describe how the final hyperparameters were chosen.
+First I determined the direction the gains would need to be in by using a large P gain and inspecting visually if the car turned towards the middle of the track or away from it. I found that with a positive P gain the car turned towards away from the middle of the track so I multiplied all gains by -1 in the initial set gains function. From now on I'll refer to all gains in positive form.
+
+I then kept slightly increasing P gain till I felt that the car was steering towards the middle with sufficient steering angle. At this point the car was oscillating very violently so I decided to slowly increase the D gain to reduce the oscillations. Once most of the oscillations were gone I slowly increased the I gain. I also implemented a interrogator windup protection system that prevent the I term from growing to large (for example on one of the large corners where lots of error could be expected) as this is not the point of the I term.
+
+Technically this system does not need an I gain to have zero steady state error (if an input of 0 makes the car run perfectly straight). If a the car was placed directly straight on the path and was given an input of 0, it would have zero steady state error. This is different than a system such as an altitude controller on a quadcopter. Even once a quadcopter reaches its desired height, it still requires some input to the motors to keep it there. This is the type of situation where I is needed to eliminate any steady state error. However I still implemented an I gain to account (for in this case a made up) error in the steering angle where perhaps a steering angle of 0 has the car move slightly to the left. This would be corrected by the I term over time and I felt was good practice for a real world scenario.
+
+At this point the PID gains were all at acceptable values (0.2, 0.02, 0.015) that could operate multiple laps of the course without going off the track. However I decided to implement a twiddle algorithm to further tune the PID gains. I used deltas of (0.015, 0.001, 0.001) and had the simulator reset after a set amount of time so that each twiddle test would have identical starting conditions. I also used the error squared as the comparing factor in twiddle to more aggressively punish moving driving off the center line as just using error on its own was making it hard to differentiate between two very close tests.
+
+I never had the final twiddle solution converge (the sum of all deltas falling below 0.001) even after running the simulator for 50 minutes, but it did roughly settle on new values (which I rounded off) of (0.25, 0.023, 0.017).
+
+These new tuned values produced a very smooth and controlled lap.
+
 ---
 
 ## Dependencies
@@ -25,60 +43,4 @@ Self-Driving Car Engineer Nanodegree Program
 1. Clone this repo.
 2. Make a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
-4. Run it: `./pid`. 
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
+4. Run it: `./pid`.

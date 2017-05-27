@@ -38,7 +38,7 @@ int main()
   uWS::Hub h;
 
   PID pid;
-  pid.SetGains(0.22, 0.024, 0.01);
+  pid.SetGains(0.25, 0.023, 0.017);
 
 
   // TODO: Initialize the pid variable.
@@ -74,11 +74,16 @@ int main()
           double current_time  = double(current) / CLOCKS_PER_SEC;
           if(current_time > pid.GetResetTime()) {
             // Reset code by Andrey Glushko on PID slack channel.
-            reset_simulator(ws);
+            //reset_simulator(ws); // Don't reset simulator when not using twiddle.
             pid.SetResetTime(6);
           }
           pid.UpdateError(cte, current_time);
           steer_value = pid.ControlOutput();
+          if (steer_value > 1) {
+            steer_value = 1;
+          } else if (steer_value < -1) {
+            steer_value = -1;
+          }
 
 
 
@@ -87,7 +92,7 @@ int main()
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.5;
+          msgJson["throttle"] = 0.45;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
