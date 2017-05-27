@@ -4,9 +4,11 @@ Self-Driving Car Engineer Nanodegree Program
 ## Submission
 
 * Describe the effect each of the P, I, D components had in your implementation.
+
 The P gain is multiplied by the error to give a steering angle that is proportional to the amount of error there is currently. The I gain is multiplied by error integrated over time or in other words a running sum of the error that has been seen so far. The D gain is multiplied by the current error minus the previous time steps error, divided by the time step. A rough estimate of the time step (the simulators refresh rate) was found by using the ctime library.
 
 * Describe how the final hyperparameters were chosen.
+
 First I determined the direction the gains would need to be in by using a large P gain and inspecting visually if the car turned towards the middle of the track or away from it. I found that with a positive P gain the car turned towards away from the middle of the track so I multiplied all gains by -1 in the initial set gains function. From now on I'll refer to all gains in positive form.
 
 I then kept slightly increasing P gain till I felt that the car was steering towards the middle with sufficient steering angle. At this point the car was oscillating very violently so I decided to slowly increase the D gain to reduce the oscillations. Once most of the oscillations were gone I slowly increased the I gain. I also implemented a interrogator windup protection system that prevent the I term from growing to large (for example on one of the large corners where lots of error could be expected) as this is not the point of the I term.
